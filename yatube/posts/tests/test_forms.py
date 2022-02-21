@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.conf import settings
 
-from ..models import Post, Group, Comment
+from ..models import Post, Group
 from ..forms import PostForm
 
 # Создаем временную папку для медиа-файлов;
@@ -45,10 +45,6 @@ class PostCreateFormTest(TestCase):
     @classmethod
     def tearDownClass(cls):
         super().tearDownClass()
-        # Модуль shutil - библиотека Python с удобными инструментами
-        # для управления файлами и директориями:
-        # создание, удаление, копирование, перемещение, изменение папок и файлов
-        # Метод shutil.rmtree удаляет директорию и всё её содержимое
         shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
 
     def setUp(self):

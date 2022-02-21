@@ -3,9 +3,6 @@ from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.cache import cache_page
 
-
-from itertools import chain
-
 from .models import Post, Group, User, Comment, Follow
 from .forms import PostForm, CommentForm
 
@@ -46,9 +43,10 @@ def profile(request, username):
     paginator = Paginator(post_list, COUNT_ELEMS)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    following = False
     if request.user.is_authenticated:
         following = author.following.filter(user=request.user).exists()
+    else:
+        following = False
     context = {
         'page_obj': page_obj,
         'author': author,
@@ -153,7 +151,3 @@ def profile_unfollow(request, username):
     follower = Follow.objects.filter(author=author.first())
     follower.delete()
     return redirect('posts:profile', username)
-
-
-
-
