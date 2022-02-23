@@ -194,28 +194,6 @@ class PostPagesTest(TestCase):
         )
         self.assertNotEqual(response.content, response_after_clear.content)
 
-    def test_profile_follow_unfollow(self):
-        follow_author_before = self.user.follower.filter(
-            author=self.author
-        ).count()
-        Follow.objects.create(
-            user=self.user,
-            author=self.author
-        )
-        follow_author_after = self.user.follower.filter(
-            author=self.author
-        ).count()
-        self.assertEqual(
-            follow_author_after,
-            follow_author_before + 1
-        )
-        following_author = self.user.follower.filter(author=self.author)
-        following_author.delete()
-        self.assertEqual(
-            follow_author_before,
-            follow_author_after - 1
-        )
-
     def test_profile_follow(self):
         follow_author_before = Follow.objects.all().count()
         self.authorized_client.get(
