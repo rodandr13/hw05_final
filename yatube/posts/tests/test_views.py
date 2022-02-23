@@ -210,7 +210,9 @@ class PostPagesTest(TestCase):
             reverse('posts:profile_follow', kwargs={'username': self.author}))
         follow_author_before = Follow.objects.all().count()
         self.authorized_client.get(
-            reverse('posts:profile_unfollow', kwargs={'username': self.author}))
+            reverse('posts:profile_unfollow',
+                    kwargs={'username': self.author})
+        )
         follow_author_after = Follow.objects.all().count()
         self.assertFalse(Follow.objects.filter(
             user=self.user,
