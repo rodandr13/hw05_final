@@ -33,8 +33,7 @@ class StaticPageURLTesting(TestCase):
 
     def test_urls_uses_correct_template_guest_users(self):
         pages = (
-            (reverse('posts:index'),
-             'posts/index.html'),
+            (reverse('posts:index'), 'posts/index.html'),
             (reverse('posts:group_list', kwargs={'slug': self.group.slug}),
              'posts/group_list.html'),
             (reverse('posts:profile', kwargs={'username': self.user}),
@@ -85,7 +84,3 @@ class StaticPageURLTesting(TestCase):
             with self.subTest(url=url):
                 response = self.guest_client.get(url)
                 self.assertEqual(response.status_code, code)
-
-    def test_server_responds_404_unexisted_page(self):
-        response = self.authorized_client.get('/unixisted-page/')
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)

@@ -8,7 +8,6 @@ from django.core.cache import cache
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-
 from ..models import Post, Group, Follow
 from ..forms import PostForm
 
@@ -188,18 +187,24 @@ class PostPagesTest(TestCase):
         response = self.authorized_client.get(reverse('posts:index'))
         Post.objects.all().delete()
         response_after_del = self.authorized_client.get(reverse('posts:index'))
-        self.assertEqual(response.content,
-                         response_after_del.content)
+        self.assertEqual(response.content, response_after_del.content)
+        cache.clear()
+        response_after_clear = self.authorized_client.get(
+            reverse('posts:index')
+        )
+        self.assertNotEqual(response.content, response_after_clear.content)
 
     def test_profile_follow_unfollow(self):
         follow_author_before = self.user.follower.filter(
-            author=self.author).count()
+            author=self.author
+        ).count()
         Follow.objects.create(
             user=self.user,
             author=self.author
         )
         follow_author_after = self.user.follower.filter(
-            author=self.author).count()
+            author=self.author
+        ).count()
         self.assertEqual(
             follow_author_after,
             follow_author_before + 1
@@ -211,20 +216,63 @@ class PostPagesTest(TestCase):
             follow_author_after - 1
         )
 
+    def test_profile_follow(self):
+        follow_author_before = Follow.objects.all().count()
+        self.authorized_client.get(
+            reverse('posts:profile_follow', kwargs={'username': self.author}))
+        follow_author_after = Follow.objects.all().count()
+        self.assertTrue(Follow.objects.filter(
+            user=self.user,
+            author=self.author,
+        ).exists())
+        self.assertEqual(follow_author_before + 1, follow_author_after)
+
+    def test_profile_unfollow(self):
+        self.authorized_client.get(
+            reverse('posts:profile_follow', kwargs={'username': self.author}))
+        follow_author_before = Follow.objects.all().count()
+        self.authorized_client.get(
+            reverse('posts:profile_unfollow', kwargs={'username': self.author}))
+        follow_author_after = Follow.objects.all().count()
+        self.assertFalse(Follow.objects.filter(
+            user=self.user,
+            author=self.author,
+        ).exists())
+        self.assertEqual(follow_author_before - 1, follow_author_after)
+
     def test_post_for_followers(self):
-        self.post = Post.objects.create(
+        Post.objects.create(
             author=self.author,
             text='Пост для фолловеров',
         )
+        response_before = self.authorized_client.get(
+            reverse('posts:follow_index')
+        ).context['page_obj']
         Follow.objects.create(
             user=self.user,
             author=self.author
         )
-        response = self.authorized_client.get(
-            reverse('posts:follow_index')).context['page_obj']
-        response_other_user = self.authorized_other_client.get(
-            reverse('posts:follow_index')).context['page_obj']
-        self.assertNotEqual(len(response), len(response_other_user))
+        response_after = self.authorized_client.get(
+            reverse('posts:follow_index')
+        ).context['page_obj']
+        self.assertNotEqual(len(response_before), len(response_after))
+
+    def test_post_for_unfollowers(self):
+        Post.objects.create(
+            author=self.author,
+            text='Пост для фолловеров',
+        )
+        response_before = self.authorized_other_client.get(
+            reverse('posts:follow_index')
+        ).context['page_obj']
+        Follow.objects.create(
+            user=self.user,
+            author=self.author
+        )
+        response_after = self.authorized_other_client.get(
+            reverse('posts:follow_index')
+        ).context['page_obj']
+        self.assertEqual(len(response_before), len(response_after))
 
 
 class PaginatorViewsTest(TestCase):

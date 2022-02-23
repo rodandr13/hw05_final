@@ -9,11 +9,9 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.conf import settings
 
-from ..models import Post, Group
+from ..models import Post, Group, Comment
 from ..forms import PostForm
 
-# Создаем временную папку для медиа-файлов;
-# на момент теста медиа папка будет переопределена
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
 User = get_user_model()
@@ -91,8 +89,10 @@ class PostCreateFormTest(TestCase):
                 image='posts/small.gif',
             ).exists()
         )
-        self.assertEqual(last_post.image.name,
-                         'posts/' + form_data['image'].name)
+        self.assertEqual(
+            last_post.image.name,
+            'posts/' + form_data['image'].name
+        )
         self.assertEqual(last_post.text, form_data['text'])
         self.assertEqual(last_post.group.id, form_data['group'])
         self.assertEqual(Post.objects.count(), post_count + 1)
@@ -135,3 +135,7 @@ class PostCreateFormTest(TestCase):
         )
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(post.comments.count(), comments_count + 1)
+        comment = Comment.objects.last()
+        self.assertEqual(form_data['text'], comment.text)
+        self.assertEqual(form_data['post'], comment.post.id)
+        self.assertEqual(form_data['author'], comment.author.id)
