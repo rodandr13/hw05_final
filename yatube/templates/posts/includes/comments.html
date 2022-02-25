@@ -8,7 +8,13 @@
       <form method="post" action="{% url 'posts:add_comment' post.id %}">
         {% csrf_token %}
         <div class="form-group mb-2">
+            <label for="{{ form.text.id_for_label }}">
+            {{ form.text.label }}
+          </label>
           {{ form.text|addclass:"form-control" }}
+          <small id="id_text-help" class="form-text text-muted">
+            {{ form.text.help_text }}
+          </small>
         </div>
         <button type="submit" class="btn btn-primary">Отправить</button>
       </form>
@@ -24,9 +30,9 @@
           {{ comment.author.username }}
         </a>
       </h5>
-        <p>
-         {{ comment.text }}
-        </p>
-      </div>
+      <p>
+        {{ comment.text }}
+      </p>
     </div>
+  </div>
 {% endfor %}

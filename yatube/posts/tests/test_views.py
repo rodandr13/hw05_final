@@ -183,21 +183,26 @@ class PostPagesTest(TestCase):
         self.assertTrue(response.context['is_edit'])
         self.assertIsInstance(response.context['is_edit'], bool)
 
-    def test_cache_for_index_page(self):
+    def test_cache_for_index_page_after_clear_cache(self):
         response = self.authorized_client.get(reverse('posts:index'))
         Post.objects.all().delete()
-        response_after_del = self.authorized_client.get(reverse('posts:index'))
-        self.assertEqual(response.content, response_after_del.content)
         cache.clear()
         response_after_clear = self.authorized_client.get(
             reverse('posts:index')
         )
         self.assertNotEqual(response.content, response_after_clear.content)
 
+    def test_cache_for_index_page_after_del(self):
+        response = self.authorized_client.get(reverse('posts:index'))
+        Post.objects.all().delete()
+        response_after_del = self.authorized_client.get(reverse('posts:index'))
+        self.assertEqual(response.content, response_after_del.content)
+
     def test_profile_follow(self):
         follow_author_before = Follow.objects.all().count()
         self.authorized_client.get(
-            reverse('posts:profile_follow', kwargs={'username': self.author}))
+            reverse('posts:profile_follow', kwargs={'username': self.author})
+        )
         follow_author_after = Follow.objects.all().count()
         self.assertTrue(Follow.objects.filter(
             user=self.user,
@@ -207,11 +212,11 @@ class PostPagesTest(TestCase):
 
     def test_profile_unfollow(self):
         self.authorized_client.get(
-            reverse('posts:profile_follow', kwargs={'username': self.author}))
+            reverse('posts:profile_follow', kwargs={'username': self.author})
+        )
         follow_author_before = Follow.objects.all().count()
         self.authorized_client.get(
-            reverse('posts:profile_unfollow',
-                    kwargs={'username': self.author})
+            reverse('posts:profile_unfollow', kwargs={'username': self.author})
         )
         follow_author_after = Follow.objects.all().count()
         self.assertFalse(Follow.objects.filter(
@@ -242,17 +247,16 @@ class PostPagesTest(TestCase):
             author=self.author,
             text='Пост для фолловеров',
         )
-        response_before = self.authorized_other_client.get(
-            reverse('posts:follow_index')
-        ).context['page_obj']
         Follow.objects.create(
             user=self.user,
             author=self.author
         )
-        response_after = self.authorized_other_client.get(
-            reverse('posts:follow_index')
-        ).context['page_obj']
-        self.assertEqual(len(response_before), len(response_after))
+        self.assertFalse(
+            Post.objects.filter(
+                author__following__user=self.other_user
+            ).exists()
+        )
+
 
 
 class PaginatorViewsTest(TestCase):
