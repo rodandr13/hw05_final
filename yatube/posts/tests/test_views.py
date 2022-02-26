@@ -258,7 +258,6 @@ class PostPagesTest(TestCase):
         )
 
 
-
 class PaginatorViewsTest(TestCase):
     @classmethod
     def setUpClass(cls):
