@@ -211,7 +211,7 @@ class PostPagesTest(TestCase):
         self.assertEqual(follow_author_before + 1, follow_author_after)
 
     def test_profile_unfollow(self):
-        post = Post.objects.create(
+        Post.objects.create(
             author=self.author,
             text='Пост для фолловеров',
         )
