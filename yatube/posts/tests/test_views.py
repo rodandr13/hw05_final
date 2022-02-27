@@ -211,8 +211,13 @@ class PostPagesTest(TestCase):
         self.assertEqual(follow_author_before + 1, follow_author_after)
 
     def test_profile_unfollow(self):
-        self.authorized_client.get(
-            reverse('posts:profile_follow', kwargs={'username': self.author})
+        post = Post.objects.create(
+            author=self.author,
+            text='Пост для фолловеров',
+        )
+        Follow.objects.create(
+            user=self.user,
+            author=self.author
         )
         follow_author_before = Follow.objects.all().count()
         self.authorized_client.get(
@@ -226,7 +231,7 @@ class PostPagesTest(TestCase):
         self.assertEqual(follow_author_before - 1, follow_author_after)
 
     def test_post_for_followers(self):
-        Post.objects.create(
+        post = Post.objects.create(
             author=self.author,
             text='Пост для фолловеров',
         )
@@ -241,9 +246,10 @@ class PostPagesTest(TestCase):
             reverse('posts:follow_index')
         ).context['page_obj']
         self.assertNotEqual(len(response_before), len(response_after))
+        self.assertIn(post, response_after)
 
     def test_post_for_unfollowers(self):
-        Post.objects.create(
+        post = Post.objects.create(
             author=self.author,
             text='Пост для фолловеров',
         )
@@ -251,11 +257,11 @@ class PostPagesTest(TestCase):
             user=self.user,
             author=self.author
         )
-        self.assertFalse(
-            Post.objects.filter(
-                author__following__user=self.other_user
-            ).exists()
-        )
+        response = self.authorized_other_client.get(
+            reverse('posts:follow_index')
+        ).context['page_obj']
+        self.assertEqual(len(response), 0)
+        self.assertNotIn(post, response)
 
 
 class PaginatorViewsTest(TestCase):
